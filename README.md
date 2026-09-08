@@ -1,4 +1,4 @@
-# 🪐 Órbita — Conectando ideias, pessoas e resultados
+# 🪐 Órbita — Conectando ideias, pessoas e resultados (Backend)
 
 > Sistema de Gestão de Demandas de Inovação
 
