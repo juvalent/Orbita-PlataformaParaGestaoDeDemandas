@@ -158,30 +158,16 @@ De acordo com os requisitos definidos para o projeto, a solução utiliza como b
 
 ### Backend
 
-* Java 21 LTS
-* Spring Boot 3.x
+* Python
 * API REST
 * PostgreSQL 16
-* Flyway
-* OpenAPI / Swagger
+  
 
 ### Frontend
 
-* Angular 18+
-* TypeScript
-* Angular Material
+* React
 * PWA
 * Interface responsiva
-
-### Segurança
-
-* OAuth2 / OpenID Connect
-* Azure AD
-* RBAC
-* MFA
-* Controle de acesso
-* Auditoria
-* Conformidade com LGPD
 
 ---
 
