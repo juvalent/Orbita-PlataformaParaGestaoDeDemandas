@@ -1,5 +1,6 @@
 from flask import jsonify
 from marshmallow import ValidationError
+from flask_limiter.errors import RateLimitExceeded
 from werkzeug.exceptions import HTTPException
 
 from app.errors import AppError
@@ -17,6 +18,11 @@ def registrar_error_handlers(app):
     @app.errorhandler(AppError)
     def erro_de_negocio(e):
         return jsonify({"erro": e.mensagem}), e.status_code
+
+    @app.errorhandler(RateLimitExceeded)
+    def excesso_de_requisicoes(e):
+        return jsonify({"erro": "Muitas requisições. Aguarde um pouco e "
+                                "tente novamente."}), 429
 
     @app.errorhandler(HTTPException)
     def erro_http(e):
