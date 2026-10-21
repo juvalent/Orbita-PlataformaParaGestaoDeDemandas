@@ -37,8 +37,9 @@ def create_app(config=None):
 
     registrar_error_handlers(app)
 
-    from app.routes import bp_auth, bp_health
+    from app.routes import bp_auth, bp_health, bp_desafio
     app.register_blueprint(bp_health)
     app.register_blueprint(bp_auth)
+    app.register_blueprint(bp_desafio)
 
     return app
