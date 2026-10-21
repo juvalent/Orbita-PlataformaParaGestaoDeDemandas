@@ -49,7 +49,8 @@ class IdeiaCriarSchema(_SchemaIdeiaBase):
         error_messages=OBRIGATORIO,
         validate=validate.Length(
             min=10,
-            error="A descrição deve ter pelo menos 10 caracteres.",
+            max=5000,
+            error="A descrição deve ter entre 10 e 5000 caracteres.",
         ),
     )
     area = fields.Str(
@@ -62,8 +63,12 @@ class IdeiaCriarSchema(_SchemaIdeiaBase):
         allow_none=True,
         validate=validate.Length(max=100, error="A categoria aceita até 100 caracteres."),
     )
-    problema_resolvido = fields.Str(load_default=None, allow_none=True)
-    beneficio_esperado = fields.Str(load_default=None, allow_none=True)
+    problema_resolvido = fields.Str(
+        load_default=None, allow_none=True,
+        validate=validate.Length(max=5000, error="Aceita até 5000 caracteres."))
+    beneficio_esperado = fields.Str(
+        load_default=None, allow_none=True,
+        validate=validate.Length(max=5000, error="Aceita até 5000 caracteres."))
 
 
 class IdeiaAtualizarSchema(_SchemaIdeiaBase):
@@ -84,7 +89,8 @@ class IdeiaAtualizarSchema(_SchemaIdeiaBase):
     descricao = fields.Str(
         validate=validate.Length(
             min=10,
-            error="A descrição deve ter pelo menos 10 caracteres.",
+            max=5000,
+            error="A descrição deve ter entre 10 e 5000 caracteres.",
         ),
     )
     area = fields.Str(
@@ -95,8 +101,12 @@ class IdeiaAtualizarSchema(_SchemaIdeiaBase):
         allow_none=True,
         validate=validate.Length(max=100, error="A categoria aceita até 100 caracteres."),
     )
-    problema_resolvido = fields.Str(allow_none=True)
-    beneficio_esperado = fields.Str(allow_none=True)
+    problema_resolvido = fields.Str(
+        allow_none=True,
+        validate=validate.Length(max=5000, error="Aceita até 5000 caracteres."))
+    beneficio_esperado = fields.Str(
+        allow_none=True,
+        validate=validate.Length(max=5000, error="Aceita até 5000 caracteres."))
 
     @validates_schema
     def exigir_campo_atualizavel(self, dados, **kwargs):
@@ -126,6 +136,10 @@ class IdeiaFiltroSchema(_SchemaIdeiaBase):
     area = fields.Str(validate=validate.Length(max=100))
     categoria = fields.Str(validate=validate.Length(max=100))
     q = fields.Str(validate=validate.Length(max=100))
+    id_desafio = fields.Int(
+        validate=validate.Range(min=1, error="Informe um desafio válido."))
+    # minhas=true: só as ideias de autoria do usuário logado ("Minhas Ideias")
+    minhas = fields.Bool(load_default=False)
 
 
 class IdeiaResponseSchema(Schema):
@@ -135,6 +149,7 @@ class IdeiaResponseSchema(Schema):
     codigo = fields.Str(dump_only=True, allow_none=True)
     id_autor = fields.Int(dump_only=True)
     id_desafio = fields.Int(dump_only=True)
+    desafio_titulo = fields.Str(dump_only=True, allow_none=True)
     titulo = fields.Str(dump_only=True)
     descricao = fields.Str(dump_only=True)
     area = fields.Str(dump_only=True, allow_none=True)

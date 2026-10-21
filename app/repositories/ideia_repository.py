@@ -1,7 +1,7 @@
 from sqlalchemy import func, or_, select
 
 from app.extensions import db
-from app.models import Ideia
+from app.models import Desafio, Ideia
 
 
 def _escapar_like(texto):
@@ -11,12 +11,28 @@ def _escapar_like(texto):
             .replace("_", "\\_"))
 
 
-def listar(filtros, page, page_size):
+def listar(filtros, page, page_size, escopo=None):
     """Devolve (ideias, total) aplicando filtros e paginação.
 
-    filtros: dict com as chaves opcionais status, area, categoria e q.
+    filtros: dict com as chaves opcionais status, area, categoria,
+             id_desafio e q.
+    escopo:  quem pode ser visto. None = todas as ideias.
+             {"id_autor": X}  = só as ideias do autor X;
+             {"id_autor": X, "id_responsavel_desafio": X} = as do autor X
+             mais as ligadas a desafios dos quais X é responsável.
     """
     consulta = select(Ideia)
+
+    if escopo:
+        condicoes = [Ideia.id_autor == escopo["id_autor"]]
+        if escopo.get("id_responsavel_desafio"):
+            desafios_do_gestor = select(Desafio.id_desafio).where(
+                Desafio.id_responsavel == escopo["id_responsavel_desafio"])
+            condicoes.append(Ideia.id_desafio.in_(desafios_do_gestor))
+        consulta = consulta.where(or_(*condicoes))
+
+    if filtros.get("id_desafio"):
+        consulta = consulta.where(Ideia.id_desafio == filtros["id_desafio"])
 
     if filtros.get("status"):
         consulta = consulta.where(Ideia.status == filtros["status"])

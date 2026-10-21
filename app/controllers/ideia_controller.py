@@ -22,7 +22,11 @@ def listar():
     filtros = IdeiaFiltroSchema().load(request.args)
     page = filtros.pop("page")
     page_size = filtros.pop("page_size")
-    return jsonify(ideia_service.listar(filtros, page, page_size)), 200
+    minhas = filtros.pop("minhas")
+    resultado = ideia_service.listar(filtros, page, page_size,
+                                     _id_usuario_logado(), _perfis_do_token(),
+                                     minhas)
+    return jsonify(resultado), 200
 
 
 def criar():
@@ -31,7 +35,9 @@ def criar():
 
 
 def obter(id_ideia):
-    return jsonify(ideia_service.obter(id_ideia)), 200
+    ideia = ideia_service.obter(id_ideia, _id_usuario_logado(),
+                                _perfis_do_token())
+    return jsonify(ideia), 200
 
 
 def atualizar(id_ideia):
@@ -46,4 +52,6 @@ def aprovar(id_ideia):
 
 
 def arquivar(id_ideia):
-    return jsonify(ideia_service.arquivar(id_ideia, _perfis_do_token())), 200
+    ideia = ideia_service.arquivar(id_ideia, _id_usuario_logado(),
+                                   _perfis_do_token())
+    return jsonify(ideia), 200

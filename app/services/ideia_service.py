@@ -12,37 +12,62 @@ from app.repositories import desafio_repository, ideia_repository, usuario_repos
 from app.schemas.ideia_schema import IdeiaResponseSchema
 
 _RESPOSTA_IDEIA = IdeiaResponseSchema()
-_PERFIS_GESTAO = {
-    "gestor demandante",
-    "analista/hub",
-    "gestor",
-    "analista",
-    "hub",
-    "administrador",
-    "admin",
-}
+_PERFIS_ANALISTA = {"analista/hub", "analista", "hub", "administrador",
+                    "admin"}
+_PERFIS_GESTOR = {"gestor demandante", "gestor"}
 _STATUS_EDITAVEIS = {"submetida", "rascunho", "nova"}
 _STATUS_APROVAVEIS = {"submetida", "nova", "em_avaliacao", "em avaliação"}
 
 
-def _serializar(ideia):
-    """Converte o modelo SQLAlchemy para um dicionário JSON seguro."""
-    return _RESPOSTA_IDEIA.dump(ideia)
+def _serializar(ideia, titulos=None):
+    dados = _RESPOSTA_IDEIA.dump(ideia)
+    if titulos is None:
+        titulos = desafio_repository.titulos_por_ids([ideia.id_desafio])
+    dados["desafio_titulo"] = titulos.get(ideia.id_desafio)
+    return dados
 
 
 def _status_normalizado(status):
     return (status or "").strip().casefold().replace("-", "_")
 
 
-def _tem_perfil_gestor(perfis):
-    """Aceita os nomes de perfil emitidos pelo serviço de autenticação atual."""
-    nomes = {str(perfil).strip().casefold() for perfil in (perfis or [])}
-    return bool(nomes.intersection(_PERFIS_GESTAO))
+def _nomes_de_perfil(perfis):
+    return {str(perfil).strip().casefold() for perfil in (perfis or [])}
 
 
-def _exigir_gestor(perfis):
-    if not _tem_perfil_gestor(perfis):
-        raise ProibidoError("Apenas Gestor ou Analista/Hub pode realizar esta ação.")
+def _e_analista(perfis):
+    return bool(_nomes_de_perfil(perfis) & _PERFIS_ANALISTA)
+
+
+def _e_gestor(perfis):
+    return bool(_nomes_de_perfil(perfis) & _PERFIS_GESTOR)
+
+
+def _exigir_analista(perfis):
+    if not _e_analista(perfis):
+        raise ProibidoError("Apenas o Analista/Hub pode realizar esta ação.")
+
+
+def _pode_ver(ideia, id_usuario, perfis):
+    if ideia.id_autor == id_usuario or _e_analista(perfis):
+        return True
+    return _e_gestor(perfis) and desafio_repository.usuario_e_responsavel(
+        ideia.id_desafio, id_usuario)
+
+
+def _exigir_ver(ideia, id_usuario, perfis):
+    if not _pode_ver(ideia, id_usuario, perfis):
+        raise ProibidoError("Você não tem permissão para acessar esta ideia.")
+
+
+def _escopo_de_visibilidade(id_usuario, perfis, minhas):
+    if minhas:
+        return {"id_autor": id_usuario}
+    if _e_analista(perfis):
+        return None  # vê todas
+    if _e_gestor(perfis):
+        return {"id_autor": id_usuario, "id_responsavel_desafio": id_usuario}
+    return {"id_autor": id_usuario}
 
 
 def _buscar_ideia_ou_404(id_ideia):
@@ -60,7 +85,6 @@ def _validar_desafio(id_desafio):
 
 
 def _proximo_codigo():
-    """Gera o próximo código IDE-AAAA-NNNN com base nos códigos do ano."""
     ano = datetime.now(timezone.utc).year
     ultimo_codigo = ideia_repository.ultimo_codigo_do_ano(ano)
     sequencial = 0
@@ -68,21 +92,21 @@ def _proximo_codigo():
         try:
             sequencial = int(ultimo_codigo.rsplit("-", 1)[1])
         except (IndexError, ValueError):
-            # Um código legado fora do formato esperado não deve interromper o cadastro.
             sequencial = 0
     return f"IDE-{ano}-{sequencial + 1:04d}"
 
 
-def listar(filtros, page, page_size):
-    """Retorna ideias paginadas e metadados da consulta."""
+def listar(filtros, page, page_size, id_usuario, perfis, minhas=False):
     filtros = {
         chave: valor.strip() if isinstance(valor, str) else valor
         for chave, valor in filtros.items()
     }
     filtros = {chave: valor for chave, valor in filtros.items() if valor not in (None, "")}
-    ideias, total = ideia_repository.listar(filtros, page, page_size)
+    escopo = _escopo_de_visibilidade(id_usuario, perfis, minhas)
+    ideias, total = ideia_repository.listar(filtros, page, page_size, escopo)
+    titulos = desafio_repository.titulos_por_ids(i.id_desafio for i in ideias)
     return {
-        "items": [_serializar(ideia) for ideia in ideias],
+        "items": [_serializar(ideia, titulos) for ideia in ideias],
         "page": page,
         "page_size": page_size,
         "total": total,
@@ -90,13 +114,13 @@ def listar(filtros, page, page_size):
     }
 
 
-def obter(id_ideia):
-    """Busca uma ideia pelo identificador numérico."""
-    return _serializar(_buscar_ideia_ou_404(id_ideia))
+def obter(id_ideia, id_usuario, perfis):
+    ideia = _buscar_ideia_ou_404(id_ideia)
+    _exigir_ver(ideia, id_usuario, perfis)
+    return _serializar(ideia)
 
 
 def criar(dados, id_autor):
-    """Cria uma ideia vinculada ao usuário autenticado e a um desafio existente."""
     usuario = usuario_repository.buscar_por_id(id_autor)
     if usuario is None:
         raise NaoEncontradoError("Usuário autenticado não encontrado.")
@@ -105,9 +129,6 @@ def criar(dados, id_autor):
     payload = dict(dados)
     payload["titulo"] = payload["titulo"].strip()
     payload["descricao"] = payload["descricao"].strip()
-
-    # Uma colisão pode ocorrer se dois cadastros simultâneos calcularem o mesmo código.
-    # Tentamos novamente após rollback, consultando o maior código já persistido.
     for tentativa in range(3):
         ideia = Ideia(
             codigo=_proximo_codigo(),
@@ -132,17 +153,14 @@ def criar(dados, id_autor):
                 raise ConflitoError(
                     "Não foi possível gerar um código único para a ideia. Tente novamente."
                 ) from erro
-
-    # O laço sempre retorna ou levanta uma exceção; o retorno protege analisadores estáticos.
     raise ConflitoError("Não foi possível cadastrar a ideia.")
 
 
 def atualizar(id_ideia, dados, id_usuario, perfis):
     """Atualiza uma ideia editável, conforme autoria ou perfil de gestão."""
     ideia = _buscar_ideia_ou_404(id_ideia)
-    gestor = _tem_perfil_gestor(perfis)
 
-    if ideia.id_autor != id_usuario and not gestor:
+    if ideia.id_autor != id_usuario and not _e_analista(perfis):
         raise ProibidoError("Você não tem permissão para editar esta ideia.")
 
     if _status_normalizado(ideia.status) not in _STATUS_EDITAVEIS:
@@ -167,8 +185,7 @@ def atualizar(id_ideia, dados, id_usuario, perfis):
 
 
 def aprovar(id_ideia, perfis):
-    """Aprova uma ideia submetida, exclusivamente por perfil de gestão."""
-    _exigir_gestor(perfis)
+    _exigir_analista(perfis)
     ideia = _buscar_ideia_ou_404(id_ideia)
     status_atual = _status_normalizado(ideia.status)
 
@@ -180,12 +197,20 @@ def aprovar(id_ideia, perfis):
     return _persistir_novo_status(ideia, "aprovada")
 
 
-def arquivar(id_ideia, perfis):
-    """Arquiva uma ideia por perfil de gestão; operação não é repetível."""
-    _exigir_gestor(perfis)
+def arquivar(id_ideia, id_usuario, perfis):
     ideia = _buscar_ideia_ou_404(id_ideia)
-    if _status_normalizado(ideia.status) == "arquivada":
+    _exigir_ver(ideia, id_usuario, perfis)
+
+    status_atual = _status_normalizado(ideia.status)
+    if status_atual == "arquivada":
         raise ConflitoError("A ideia já está arquivada.")
+
+    so_autor = (ideia.id_autor == id_usuario
+                and not _e_analista(perfis) and not _e_gestor(perfis))
+    if so_autor and status_atual not in _STATUS_EDITAVEIS:
+        raise ProibidoError(
+            "Esta ideia já está em avaliação e só pode ser arquivada por "
+            "Gestor ou Analista/Hub.")
     return _persistir_novo_status(ideia, "arquivada")
 
 

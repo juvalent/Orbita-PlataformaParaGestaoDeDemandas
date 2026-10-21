@@ -25,7 +25,13 @@ bp_ideia.add_url_rule(
 bp_ideia.add_url_rule(
     "/<int:id_ideia>",
     view_func=jwt_required()(ideia_controller.atualizar),
-    methods=["PATCH"],
+    methods=["PATCH", "PUT"],  # o contrato do PDF fala em PUT; aceita parcial
+)
+bp_ideia.add_url_rule(
+    "/<int:id_ideia>",
+    view_func=jwt_required()(ideia_controller.arquivar),
+    endpoint="arquivar_delete",  # nome próprio: o POST /arquivar usa "arquivar"
+    methods=["DELETE"],  # DELETE = arquivar (a ideia não é apagada do banco)
 )
 bp_ideia.add_url_rule(
     "/<int:id_ideia>/aprovar",
