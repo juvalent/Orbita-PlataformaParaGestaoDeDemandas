@@ -12,6 +12,7 @@ class Ideia(Base):
 
     id_ideia: Mapped[int] = mapped_column(primary_key=True)
     id_autor: Mapped[int] = mapped_column(ForeignKey("usuario.id_usuario"), nullable=False)
+    id_desafio: Mapped[int] = mapped_column(ForeignKey("desafio.id_desafio"), nullable=False)
     titulo: Mapped[str] = mapped_column(String(150), nullable=False)
     descricao: Mapped[str] = mapped_column(Text, nullable=False)
     area: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
