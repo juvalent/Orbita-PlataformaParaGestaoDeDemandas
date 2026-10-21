@@ -9,7 +9,6 @@ def buscar_por_id(id_desafio):
 
 
 def titulos_por_ids(ids):
-    """Devolve {id_desafio: titulo} para vários desafios de uma vez."""
     ids = set(ids)
     if not ids:
         return {}
@@ -19,7 +18,6 @@ def titulos_por_ids(ids):
 
 
 def usuario_e_responsavel(id_desafio, id_usuario):
-    """True se o usuário é o responsável (gestor) do desafio."""
     consulta = select(Desafio.id_desafio).where(
         Desafio.id_desafio == id_desafio,
         Desafio.id_responsavel == id_usuario)

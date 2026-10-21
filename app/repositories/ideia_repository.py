@@ -5,22 +5,12 @@ from app.models import Desafio, Ideia
 
 
 def _escapar_like(texto):
-    """Escapa %, _ e \\ para que a busca trate o texto de forma literal."""
     return (texto.replace("\\", "\\\\")
             .replace("%", "\\%")
             .replace("_", "\\_"))
 
 
 def listar(filtros, page, page_size, escopo=None):
-    """Devolve (ideias, total) aplicando filtros e paginação.
-
-    filtros: dict com as chaves opcionais status, area, categoria,
-             id_desafio e q.
-    escopo:  quem pode ser visto. None = todas as ideias.
-             {"id_autor": X}  = só as ideias do autor X;
-             {"id_autor": X, "id_responsavel_desafio": X} = as do autor X
-             mais as ligadas a desafios dos quais X é responsável.
-    """
     consulta = select(Ideia)
 
     if escopo:
@@ -59,7 +49,6 @@ def listar(filtros, page, page_size, escopo=None):
 
 
 def ultimo_codigo_do_ano(ano):
-    """Maior código do ano (ex.: IDE-2026-0007) ou None se não houver."""
     consulta = (select(Ideia.codigo)
                 .where(Ideia.codigo.like(f"IDE-{ano}-%"))
                 .order_by(func.length(Ideia.codigo).desc(),
@@ -73,14 +62,12 @@ def buscar_por_id(id_ideia):
 
 
 def adicionar(ideia):
-    """Adiciona na sessão e gera o id (o commit é feito no service)."""
     db.session.add(ideia)
     db.session.flush()
     return ideia
 
 
 def atualizar(ideia, campos):
-    """Aplica os campos no objeto (o commit é feito no service)."""
     for nome, valor in campos.items():
         setattr(ideia, nome, valor)
     db.session.flush()
@@ -88,7 +75,6 @@ def atualizar(ideia, campos):
 
 
 def alterar_status(ideia, novo_status):
-    """Muda o status da ideia (o commit é feito no service)."""
     ideia.status = novo_status
     db.session.flush()
     return ideia
