@@ -1,5 +1,3 @@
-"""Schemas de validação e serialização para a entidade Ideia."""
-
 from marshmallow import EXCLUDE, Schema, ValidationError, fields, pre_load, validate, validates_schema
 
 
@@ -11,13 +9,11 @@ OBRIGATORIO = {
 
 class _SchemaIdeiaBase(Schema):
     """Configuração comum aos schemas de entrada: ignora campos desconhecidos."""
-
     class Meta:
         unknown = EXCLUDE
 
     @pre_load
     def normalizar_textos(self, dados, **kwargs):
-        """Remove espaços excedentes das extremidades dos textos enviados."""
         if isinstance(dados, dict):
             return {
                 chave: valor.strip() if isinstance(valor, str) else valor
@@ -28,7 +24,6 @@ class _SchemaIdeiaBase(Schema):
 
 class IdeiaCriarSchema(_SchemaIdeiaBase):
     """Valida o payload necessário para cadastrar uma ideia."""
-
     id_desafio = fields.Int(
         required=True,
         strict=True,
@@ -73,7 +68,6 @@ class IdeiaCriarSchema(_SchemaIdeiaBase):
 
 class IdeiaAtualizarSchema(_SchemaIdeiaBase):
     """Valida PATCH parcial sem permitir alterar código, autor ou status."""
-
     id_desafio = fields.Int(
         strict=True,
         allow_none=False,
