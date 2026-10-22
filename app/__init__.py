@@ -16,11 +16,9 @@ def create_app():
 
     from app import models
 
-    from app.routes import bp_auth, bp_health, bp_ideia
-
     registrar_error_handlers(app)
 
-    from app.routes import bp_auth, bp_health, bp_desafio
+    from app.routes import bp_auth, bp_health, bp_desafio, bp_ideia
     app.register_blueprint(bp_health)
     app.register_blueprint(bp_ideia)
     app.register_blueprint(bp_auth)
