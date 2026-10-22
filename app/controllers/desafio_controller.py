@@ -17,3 +17,7 @@ def listar():
 def remover(id_desafio):
     desafio_service.remover(id_desafio)
     return "", 204
+
+def atualizar(id_desafio):
+    dados = DesafioSchema(partial=True).load(__json_da_requisicao())
+    return jsonify(desafio_service.atualizar(id_desafio, dados)), 200

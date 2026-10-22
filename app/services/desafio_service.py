@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 
-from app.errors import (ConflitoError, NaoEncontradoError, ProibidoError)
+from app.errors import (AppError, ConflitoError, NaoEncontradoError, ProibidoError)
 from app.extensions import db
 from app.models import Desafio
 from app.repositories import desafio_repository, usuario_repository
@@ -59,3 +59,28 @@ def remover(id_desafio):
         raise NaoEncontradoError("Desafio não encontrado.")
     desafio_repository.deletar(desafio)
     db.session.commit()
+
+def atualizar(id_desafio, dados):
+    desafio = desafio_repository.buscar_por_id(id_desafio)
+    if not desafio:
+        raise NaoEncontradoError("Desafio não encontrado.")
+
+    # o responsável (email) não é alterado por aqui; só os dados do desafio
+    campos = ("titulo", "descricao_problema", "area_demandante", "quem_afeta",
+              "impacto", "urgencia", "categoria", "status")
+    alterados = {campo: dados[campo] for campo in campos if campo in dados}
+    if not alterados:
+        raise AppError("Informe ao menos um campo válido para atualizar.")
+
+    for campo, valor in alterados.items():
+        setattr(desafio, campo, valor)
+
+    try:
+        desafio_repository.atualizar(desafio)
+        db.session.commit()
+        db.session.refresh(desafio)
+    except IntegrityError:
+        db.session.rollback()
+        raise ConflitoError("Não foi possível atualizar o desafio com os dados informados.")
+
+    return _desafio_para_dict(desafio)
