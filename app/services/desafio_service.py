@@ -57,8 +57,13 @@ def remover(id_desafio):
     desafio = desafio_repository.buscar_por_id(id_desafio)
     if not desafio:
         raise NaoEncontradoError("Desafio não encontrado.")
-    desafio_repository.deletar(desafio)
-    db.session.commit()
+    try:
+        desafio_repository.deletar(desafio)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        raise ConflitoError(
+            "Este desafio possui ideias vinculadas e não pode ser removido.")
 
 def atualizar(id_desafio, dados):
     desafio = desafio_repository.buscar_por_id(id_desafio)

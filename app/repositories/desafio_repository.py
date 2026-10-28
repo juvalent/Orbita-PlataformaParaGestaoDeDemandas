@@ -35,3 +35,10 @@ def atualizar(desafio):
 def deletar(desafio):
     db.session.delete(desafio)
     db.session.flush()
+
+def usuario_e_responsavel(id_desafio, id_usuario):
+    """True se o usuário é o gestor responsável pelo desafio."""
+    consulta = select(Desafio.id_desafio).where(
+        Desafio.id_desafio == id_desafio,
+        Desafio.id_responsavel == id_usuario)
+    return db.session.scalar(consulta) is not None
