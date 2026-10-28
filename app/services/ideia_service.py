@@ -86,7 +86,11 @@ def _validar_desafio(id_desafio):
 
 def _proximo_codigo():
     ano = datetime.now(timezone.utc).year
-    ultimo_codigo = ideia_repository.ultimo_codigo_do_ano(ano)
+    ultimo_codigo = Null
+    try:
+        ultimo_codigo = ideia_repository.ultimo_codigo_do_ano(ano)
+    except:
+        ultimo_codigo = False
     sequencial = 0
     if ultimo_codigo:
         try:
