@@ -1,5 +1,3 @@
-"""Schemas de validação e serialização para a entidade Ideia."""
-
 from marshmallow import EXCLUDE, Schema, ValidationError, fields, pre_load, validate, validates_schema
 
 
@@ -10,6 +8,7 @@ OBRIGATORIO = {
 
 
 class _SchemaIdeiaBase(Schema):
+    """Configuração comum aos schemas de entrada: ignora campos desconhecidos."""
     class Meta:
         unknown = EXCLUDE
 
@@ -25,7 +24,6 @@ class _SchemaIdeiaBase(Schema):
 
 class IdeiaCriarSchema(_SchemaIdeiaBase):
     """Valida o payload necessário para cadastrar uma ideia."""
-
     id_desafio = fields.Int(
         required=True,
         strict=True,
@@ -70,7 +68,6 @@ class IdeiaCriarSchema(_SchemaIdeiaBase):
 
 class IdeiaAtualizarSchema(_SchemaIdeiaBase):
     """Valida PATCH parcial sem permitir alterar código, autor ou status."""
-
     id_desafio = fields.Int(
         strict=True,
         allow_none=False,
@@ -107,6 +104,7 @@ class IdeiaAtualizarSchema(_SchemaIdeiaBase):
 
     @validates_schema
     def exigir_campo_atualizavel(self, dados, **kwargs):
+        """Impede PATCH vazio ou composto apenas por campos desconhecidos."""
         if not dados:
             raise ValidationError(
                 {"_schema": ["Informe ao menos um campo válido para atualizar."]}
@@ -114,6 +112,8 @@ class IdeiaAtualizarSchema(_SchemaIdeiaBase):
 
 
 class IdeiaFiltroSchema(_SchemaIdeiaBase):
+    """Valida paginação, filtros e busca textual da listagem de ideias."""
+
     page = fields.Int(
         load_default=1,
         validate=validate.Range(min=1, error="page deve ser maior ou igual a 1."),
@@ -132,10 +132,12 @@ class IdeiaFiltroSchema(_SchemaIdeiaBase):
     q = fields.Str(validate=validate.Length(max=100))
     id_desafio = fields.Int(
         validate=validate.Range(min=1, error="Informe um desafio válido."))
+    # minhas=true: só as ideias de autoria do usuário logado ("Minhas Ideias")
     minhas = fields.Bool(load_default=False)
 
 
 class IdeiaResponseSchema(Schema):
+    """Define o formato público das respostas da API para uma ideia."""
 
     id_ideia = fields.Int(dump_only=True)
     codigo = fields.Str(dump_only=True, allow_none=True)
@@ -152,5 +154,7 @@ class IdeiaResponseSchema(Schema):
     data_criacao = fields.DateTime(format="iso", dump_only=True, allow_none=True)
     data_atualizacao = fields.DateTime(format="iso", dump_only=True, allow_none=True)
 
+
+# Nomes equivalentes do guia técnico, mantidos para facilitar integração futura.
 IdeiaCreateSchema = IdeiaCriarSchema
 IdeiaUpdateSchema = IdeiaAtualizarSchema
