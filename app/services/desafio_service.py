@@ -57,32 +57,37 @@ def _desafio_para_dict(desafio):
 
 def registrar(dados, id_usuario, perfis):
     _exigir_gestor_ou_analista(perfis)
-    gestor_email = dados["email"].strip().lower()
-    gestor_responsavel = usuario_repository.buscar_por_email(gestor_email)
-    if gestor_responsavel is None:
-        raise NaoEncontradoError("Usuário responsável não encontrado.")
-    if (not _e_analista(perfis)
-            and gestor_responsavel.id_usuario != id_usuario):
-        raise ProibidoError("Você só pode registrar desafios sob sua " "própria responsabilidade.")
-    
+
+    id_responsavel = id_usuario
+    email = dados.get("email")
+    if email:
+        responsavel = usuario_repository.buscar_por_email(email.strip().lower())
+        if responsavel is None:
+            raise NaoEncontradoError("Usuário responsável não encontrado.")
+        if responsavel.id_usuario != id_usuario and not _e_analista(perfis):
+            raise ProibidoError("Você só pode registrar desafios sob sua "
+                                "própria responsabilidade.")
+        id_responsavel = responsavel.id_usuario
+
     try:
         desafio = desafio_repository.cadastrar(Desafio(
-            id_responsavel=gestor_responsavel.id_usuario,
-            titulo = dados["titulo"],
-            descricao_problema = dados["descricao_problema"],
-            area_demandante = dados["area_demandante"],
-            quem_afeta = dados["quem_afeta"],
-            impacto = dados["impacto"],
-            urgencia = dados["urgencia"],
-            categoria = dados["categoria"],
-            status = dados["status"]
+            id_responsavel=id_responsavel,
+            titulo=dados["titulo"],
+            descricao_problema=dados["descricao_problema"],
+            area_demandante=dados["area_demandante"],
+            quem_afeta=dados.get("quem_afeta"),
+            impacto=dados.get("impacto"),
+            urgencia=dados.get("urgencia"),
+            categoria=dados.get("categoria"),
+            status=dados.get("status", "aberto")
         ))
         db.session.commit()
+        db.session.refresh(desafio)
     except IntegrityError:
         db.session.rollback()
-        raise ConflitoError("O usuário não existe ou não é gestor.") # mudar depois
+        raise ConflitoError("Não foi possível registrar o desafio com os dados informados.")
 
-    return
+    return _desafio_para_dict(desafio)
 
 def listar():
     desafios = desafio_repository.buscar_todos()
@@ -96,8 +101,12 @@ def remover(id_desafio, id_usuario, perfis):
     if not desafio:
         raise NaoEncontradoError("Desafio não encontrado.")
     _exigir_gerenciar(desafio, id_usuario, perfis)
-    desafio_repository.deletar(desafio)
-    db.session.commit()
+    try:
+        desafio_repository.deletar(desafio)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        raise ConflitoError("Este desafio possui ideias vinculadas e não pode ser removido.")
 
 def atualizar(id_desafio, dados, id_usuario, perfis):
     desafio = desafio_repository.buscar_por_id(id_desafio)
