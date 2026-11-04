@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from flask_jwt_extended import get_jwt, get_jwt_identity
 
-from app.schemas.desafio_schema import DesafioSchema
+from app.schemas.desafio_schema import DesafioFiltroSchema, DesafioSchema
 from app.services import desafio_service
 
 def __json_da_requisicao():
@@ -18,8 +18,13 @@ def registrar():
     return jsonify(desafio_service.registrar(dados, _id_usuario_logado(), _perfis_do_token())), 201
 
 def listar():
-    desafios = desafio_service.listar()
-    return jsonify(desafios), 200
+    filtros = DesafioFiltroSchema().load(request.args)
+    page = filtros.pop("page")
+    page_size = filtros.pop("page_size")
+    return jsonify(desafio_service.listar(filtros, page, page_size, _perfis_do_token())), 200
+
+def obter(id_desafio):
+    return jsonify(desafio_service.obter(id_desafio, _perfis_do_token())), 200
 
 def remover(id_desafio):
     desafio_service.remover(id_desafio, _id_usuario_logado(), _perfis_do_token())
