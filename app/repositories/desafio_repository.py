@@ -15,7 +15,7 @@ def titulos_por_ids(ids):
         Desafio.id_desafio.in_(ids))
     return dict(db.session.execute(consulta).all())
 
-def buscar_por_responsavel(responsavel):
+def buscar_por_responsavel(id_responsavel):
     return db.session.scalar(select(Desafio).where(Desafio.id_responsavel == id_responsavel))
 
 def buscar_todos():
@@ -35,3 +35,9 @@ def atualizar(desafio):
 def deletar(desafio):
     db.session.delete(desafio)
     db.session.flush()
+
+def usuario_e_responsavel(id_desafio, id_usuario):
+    consulta = select(Desafio.id_desafio).where(
+        Desafio.id_desafio == id_desafio,
+        Desafio.id_responsavel == id_usuario)
+    return db.session.scalar(consulta) is not None

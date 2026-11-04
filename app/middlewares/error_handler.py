@@ -6,6 +6,13 @@ from app.errors import AppError
 from app.extensions import db, jwt
 
 
+MENSAGENS_HTTP = {
+    404: "Recurso não encontrado.",
+    405: "Método não permitido.",
+    415: "Envie o corpo da requisição em JSON.",
+}
+
+
 def registrar_error_handlers(app):
     """Todas as respostas de erro da API saem em JSON, no mesmo formato."""
 
@@ -20,7 +27,7 @@ def registrar_error_handlers(app):
 
     @app.errorhandler(HTTPException)
     def erro_http(e):
-        return jsonify({"erro": e.description}), e.code
+        return jsonify({"erro": MENSAGENS_HTTP.get(e.code, e.description)}), e.code
 
     @app.errorhandler(Exception)
     def erro_inesperado(e):
