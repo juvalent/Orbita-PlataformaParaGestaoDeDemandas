@@ -37,11 +37,12 @@ def create_app(config=None):
 
     registrar_error_handlers(app)
 
-    from app.routes import bp_auth, bp_health, bp_desafio, bp_ideia, bp_match
+    from app.routes import bp_auth, bp_health, bp_desafio, bp_ideia, bp_match, bp_triagem
     app.register_blueprint(bp_health)
     app.register_blueprint(bp_auth)
     app.register_blueprint(bp_ideia)
     app.register_blueprint(bp_desafio)
     app.register_blueprint(bp_match)
+    app.register_blueprint(bp_triagem)
 
     return app

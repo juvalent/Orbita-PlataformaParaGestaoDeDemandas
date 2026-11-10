@@ -15,5 +15,6 @@ def exigir_token():
 
 bp.add_url_rule("", view_func=match_controller.registrar, methods=["POST"])
 bp.add_url_rule("", view_func=match_controller.listar, methods=["GET"])
+bp.add_url_rule("/<int:id_match>", view_func=match_controller.obter, methods=["GET"])
 bp.add_url_rule("/sugerir-regra", view_func=match_controller.sugerir_por_regra, methods=["POST"])
 bp.add_url_rule("/<int:id_match>/validacao", view_func=match_controller.validar, methods=["POST"])

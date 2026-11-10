@@ -41,6 +41,11 @@ def _match_para_dict(match):
     }
 
 
+def _acrescentar(justificativa, rotulo, texto):
+    novo = f"{rotulo}: {texto.strip()}"
+    return f"{justificativa}\n\n{novo}" if justificativa else novo
+
+
 def _palavras(texto):
     palavras = re.findall(r"\w+", texto.casefold())
     return {p for p in palavras if len(p) >= 5 and p not in _IGNORAR}
@@ -70,10 +75,16 @@ def _pontuar(desafio, ideia, palavras_desafio):
 
 def registrar(dados, perfis):
     _exigir_analista(perfis)
-    if not desafio_repository.buscar_por_id(dados["id_desafio"]):
+    desafio = desafio_repository.buscar_por_id(dados["id_desafio"])
+    if not desafio:
         raise NaoEncontradoError("Desafio não encontrado.")
-    if not ideia_repository.buscar_por_id(dados["id_ideia"]):
+    ideia = ideia_repository.buscar_por_id(dados["id_ideia"])
+    if not ideia:
         raise NaoEncontradoError("Ideia não encontrada.")
+    if desafio.status == "arquivado":
+        raise ConflitoError("Não é possível vincular ideias a um desafio arquivado.")
+    if (ideia.status or "").strip().casefold() == "arquivada":
+        raise ConflitoError("Não é possível vincular uma ideia arquivada.")
 
     try:
         match = match_repository.adicionar(MatchIdeiaDesafio(
@@ -102,6 +113,14 @@ def listar(filtros, page, page_size, perfis):
         "total": total,
         "pages": ceil(total / page_size) if total else 0
     }
+
+
+def obter(id_match, perfis):
+    _exigir_analista(perfis)
+    match = match_repository.buscar_por_id(id_match)
+    if not match:
+        raise NaoEncontradoError("Match não encontrado.")
+    return _match_para_dict(match)
 
 
 def sugerir_por_regra(dados, perfis):
@@ -145,11 +164,13 @@ def validar(id_match, dados, id_usuario, perfis):
     if match.status_match != "PENDENTE":
         raise ConflitoError("Este match já foi validado ou descartado.")
 
-    match.status_match = "VALIDADO" if dados["decisao"] == "validar" else "DESCARTADO"
+    validando = dados["decisao"] == "validar"
+    match.status_match = "VALIDADO" if validando else "DESCARTADO"
     match.id_validado_por = id_usuario
     match.data_validacao = func.now()
     if dados.get("justificativa"):
-        match.justificativa = dados["justificativa"]
+        rotulo = "Validado" if validando else "Descartado"
+        match.justificativa = _acrescentar(match.justificativa, rotulo, dados["justificativa"])
 
     try:
         match_repository.atualizar(match)

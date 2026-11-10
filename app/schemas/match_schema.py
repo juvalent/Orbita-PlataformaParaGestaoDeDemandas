@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, validate, pre_load, EXCLUDE
+from marshmallow import Schema, ValidationError, fields, validate, pre_load, validates_schema, EXCLUDE
 
 OBRIGATORIO = {
                 "required": "Campo obrigatório.",
@@ -37,6 +37,11 @@ class MatchValidacaoSchema(Schema):
         if isinstance(dados, dict) and isinstance(dados.get("decisao"), str):
             dados = {**dados, "decisao": dados["decisao"].strip().lower()}
         return dados
+
+    @validates_schema
+    def exigir_motivo_do_descarte(self, dados, **kwargs):
+        if dados["decisao"] == "descartar" and not (dados.get("justificativa") or "").strip():
+            raise ValidationError("Informe o motivo do descarte.", "justificativa")
 
 
 class MatchSugestaoSchema(Schema):

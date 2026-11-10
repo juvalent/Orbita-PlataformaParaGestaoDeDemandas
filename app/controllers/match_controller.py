@@ -24,9 +24,13 @@ def listar():
     page_size = filtros.pop("page_size")
     return jsonify(match_service.listar(filtros, page, page_size, _perfis_do_token())), 200
 
+def obter(id_match):
+    return jsonify(match_service.obter(id_match, _perfis_do_token())), 200
+
 def sugerir_por_regra():
     dados = MatchSugestaoSchema().load(_json_da_requisicao())
-    return jsonify(match_service.sugerir_por_regra(dados, _perfis_do_token())), 201
+    resultado = match_service.sugerir_por_regra(dados, _perfis_do_token())
+    return jsonify(resultado), 201 if resultado["sugestoes"] else 200
 
 def validar(id_match):
     dados = MatchValidacaoSchema().load(_json_da_requisicao())
