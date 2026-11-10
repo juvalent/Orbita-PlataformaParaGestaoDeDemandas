@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 
-from app.extensions import db, jwt
+from app.extensions import db, jwt, limiter
 from app.middlewares.error_handler import registrar_error_handlers
 
 load_dotenv()
@@ -30,6 +30,7 @@ def create_app(config=None):
     CORS(app)
     db.init_app(app)
     jwt.init_app(app)
+    limiter.init_app(app)
 
 
     from app import models
