@@ -38,3 +38,19 @@ class DesafioSchema(Schema):
         if isinstance(dados, dict) and isinstance(dados.get("status"), str):
             dados = {**dados, "status": dados["status"].strip().lower()}
         return dados
+
+
+class DesafioFiltroSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    page = fields.Int(load_default=1, validate=validate.Range(
+        min=1, error="page deve ser maior ou igual a 1."))
+    page_size = fields.Int(load_default=10, validate=validate.Range(
+        min=1, max=100, error="page_size deve estar entre 1 e 100."))
+    status = fields.Str(validate=validate.OneOf(
+        STATUS_DESAFIO,
+        error="Status inválido. Use: " + ", ".join(STATUS_DESAFIO) + "."))
+    area = fields.Str(validate=_max(100))
+    categoria = fields.Str(validate=_max(100))
+    q = fields.Str(validate=_max(100))

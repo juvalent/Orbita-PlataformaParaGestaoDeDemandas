@@ -1,5 +1,3 @@
-"""Rotas REST autenticadas do CRUD de ideias."""
-
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
 
@@ -25,13 +23,13 @@ bp_ideia.add_url_rule(
 bp_ideia.add_url_rule(
     "/<int:id_ideia>",
     view_func=jwt_required()(ideia_controller.atualizar),
-    methods=["PATCH", "PUT"],  # o contrato do PDF fala em PUT; aceita parcial
+    methods=["PATCH", "PUT"], 
 )
 bp_ideia.add_url_rule(
     "/<int:id_ideia>",
     view_func=jwt_required()(ideia_controller.arquivar),
-    endpoint="arquivar_delete",  # nome próprio: o POST /arquivar usa "arquivar"
-    methods=["DELETE"],  # DELETE = arquivar (a ideia não é apagada do banco)
+    endpoint="arquivar_delete",
+    methods=["DELETE"],
 )
 bp_ideia.add_url_rule(
     "/<int:id_ideia>/aprovar",

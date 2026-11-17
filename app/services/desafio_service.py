@@ -1,3 +1,5 @@
+from math import ceil
+
 from sqlalchemy.exc import IntegrityError
 
 from app.errors import (AppError, ConflitoError, NaoEncontradoError, ProibidoError)
@@ -89,12 +91,26 @@ def registrar(dados, id_usuario, perfis):
 
     return _desafio_para_dict(desafio)
 
-def listar():
-    desafios = desafio_repository.buscar_todos()
-    resultado = []
-    for desafio in desafios:
-        resultado.append(_desafio_para_dict(desafio))
-    return resultado
+def listar(filtros, page, page_size, perfis):
+    # colaborador só enxerga desafios abertos
+    if not (_e_analista(perfis) or _e_gestor(perfis)):
+        filtros["status"] = "aberto"
+    desafios, total = desafio_repository.listar(filtros, page, page_size)
+    return {
+        "items": [_desafio_para_dict(desafio) for desafio in desafios],
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "pages": ceil(total / page_size) if total else 0
+    }
+
+def obter(id_desafio, perfis):
+    desafio = desafio_repository.buscar_por_id(id_desafio)
+    if not desafio:
+        raise NaoEncontradoError("Desafio não encontrado.")
+    if desafio.status != "aberto" and not (_e_analista(perfis) or _e_gestor(perfis)):
+        raise ProibidoError("Este desafio não está aberto para consulta.")
+    return _desafio_para_dict(desafio)
 
 def remover(id_desafio, id_usuario, perfis):
     desafio = desafio_repository.buscar_por_id(id_desafio)

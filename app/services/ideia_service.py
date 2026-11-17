@@ -125,7 +125,8 @@ def criar(dados, id_autor):
     if usuario is None:
         raise NaoEncontradoError("Usuário autenticado não encontrado.")
 
-    _validar_desafio(dados["id_desafio"])
+    if dados.get("id_desafio") is not None:
+        _validar_desafio(dados["id_desafio"])
     payload = dict(dados)
     payload["titulo"] = payload["titulo"].strip()
     payload["descricao"] = payload["descricao"].strip()
@@ -133,7 +134,7 @@ def criar(dados, id_autor):
         ideia = Ideia(
             codigo=_proximo_codigo(),
             id_autor=id_autor,
-            id_desafio=payload["id_desafio"],
+            id_desafio=payload.get("id_desafio"),
             titulo=payload["titulo"],
             descricao=payload["descricao"],
             area=payload.get("area"),
@@ -171,7 +172,7 @@ def atualizar(id_ideia, dados, id_usuario, perfis):
         if campo in payload:
             payload[campo] = payload[campo].strip()
 
-    if "id_desafio" in payload:
+    if payload.get("id_desafio") is not None:
         _validar_desafio(payload["id_desafio"])
 
     try:

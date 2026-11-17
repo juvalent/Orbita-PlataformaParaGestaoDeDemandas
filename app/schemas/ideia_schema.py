@@ -25,9 +25,9 @@ class _SchemaIdeiaBase(Schema):
 class IdeiaCriarSchema(_SchemaIdeiaBase):
     """Valida o payload necessário para cadastrar uma ideia."""
     id_desafio = fields.Int(
-        required=True,
+        load_default=None,
+        allow_none=True,
         strict=True,
-        error_messages=OBRIGATORIO,
         validate=validate.Range(min=1, error="Informe um desafio válido."),
     )
     titulo = fields.Str(
@@ -70,7 +70,7 @@ class IdeiaAtualizarSchema(_SchemaIdeiaBase):
     """Valida PATCH parcial sem permitir alterar código, autor ou status."""
     id_desafio = fields.Int(
         strict=True,
-        allow_none=False,
+        allow_none=True,
         validate=validate.Range(min=1, error="Informe um desafio válido."),
     )
     titulo = fields.Str(
@@ -142,7 +142,7 @@ class IdeiaResponseSchema(Schema):
     id_ideia = fields.Int(dump_only=True)
     codigo = fields.Str(dump_only=True, allow_none=True)
     id_autor = fields.Int(dump_only=True)
-    id_desafio = fields.Int(dump_only=True)
+    id_desafio = fields.Int(dump_only=True, allow_none=True)
     desafio_titulo = fields.Str(dump_only=True, allow_none=True)
     titulo = fields.Str(dump_only=True)
     descricao = fields.Str(dump_only=True)

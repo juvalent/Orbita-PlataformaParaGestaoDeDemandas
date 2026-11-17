@@ -13,7 +13,6 @@ def buscar_por_id(id_usuario):
 
 
 def adicionar(usuario):
-    """Adiciona na sessão e gera o id (o commit é feito no service)."""
     db.session.add(usuario)
     db.session.flush()
     return usuario

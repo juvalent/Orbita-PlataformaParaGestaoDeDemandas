@@ -9,6 +9,7 @@ from app.extensions import db, jwt
 MENSAGENS_HTTP = {
     404: "Recurso não encontrado.",
     405: "Método não permitido.",
+    429: "Muitas tentativas. Aguarde um pouco e tente novamente.",
     415: "Envie o corpo da requisição em JSON.",
 }
 

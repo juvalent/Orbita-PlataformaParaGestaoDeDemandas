@@ -5,7 +5,6 @@ from app.models import Perfil, UsuarioPerfil
 
 
 def obter_ou_criar(nome):
-    """Devolve o perfil pelo nome; se ainda não existir, cria."""
     perfil = db.session.scalar(select(Perfil).where(Perfil.nome == nome))
     if perfil is None:
         perfil = Perfil(nome=nome)
@@ -15,8 +14,7 @@ def obter_ou_criar(nome):
 
 
 def associar(id_usuario, id_perfil):
-    db.session.add(UsuarioPerfil(id_usuario=id_usuario,
-                                 id_perfil=id_perfil))
+    db.session.add(UsuarioPerfil(id_usuario=id_usuario, id_perfil=id_perfil))
 
 
 def listar_nomes_do_usuario(id_usuario):
