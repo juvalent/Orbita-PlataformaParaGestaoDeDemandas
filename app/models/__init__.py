@@ -10,3 +10,6 @@ from .movimentacao_kanban import MovimentacaoKanban
 from .mvp import Mvp
 from .resultado import Resultado
 from .auditoria import Auditoria
+from .ai_embedding import AiEmbedding
+from .ai_sugestao import AiSugestao
+from .ai_feedback import AiFeedback

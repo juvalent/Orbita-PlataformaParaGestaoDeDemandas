@@ -21,3 +21,13 @@ class ProibidoError(AppError):
 
 class NaoEncontradoError(AppError):
     status_code = 404
+
+
+class IAIndisponivelError(AppError):
+    """A IA falhou (rede, 5xx, resposta inválida). O fluxo manual segue livre."""
+    status_code = 503
+
+
+class IATimeoutError(AppError):
+    """A IA estourou o tempo limite de AI_TIMEOUT_SECONDS."""
+    status_code = 504
