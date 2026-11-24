@@ -20,11 +20,12 @@ class DesafioSchema(Schema):
                          error_messages={"invalid": "E-mail inválido."})
     titulo = fields.Str(required=True, validate=_max(150),
                         error_messages=OBRIGATORIO)
+    resumo = fields.Str(allow_none=True, validate=_max(300))
     descricao_problema = fields.Str(required=True, error_messages=OBRIGATORIO)
     area_demandante = fields.Str(required=True, validate=_max(100),
                                  error_messages=OBRIGATORIO)
     quem_afeta = fields.Str(allow_none=True, validate=_max(200))
-    impacto = fields.Str(allow_none=True, validate=_max(100))
+    impacto = fields.Str(allow_none=True)
     urgencia = fields.Str(allow_none=True, validate=_max(100))
     categoria = fields.Str(allow_none=True, validate=_max(100))
     status = fields.Str(

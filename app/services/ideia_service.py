@@ -120,16 +120,26 @@ def obter(id_ideia, id_usuario, perfis):
     return _serializar(ideia)
 
 
-def criar(dados, id_autor):
+def criar(dados, id_autor, perfis=None):
     usuario = usuario_repository.buscar_por_id(id_autor)
     if usuario is None:
         raise NaoEncontradoError("Usuário autenticado não encontrado.")
 
-    if dados.get("id_desafio") is not None:
-        _validar_desafio(dados["id_desafio"])
     payload = dict(dados)
     payload["titulo"] = payload["titulo"].strip()
     payload["descricao"] = payload["descricao"].strip()
+
+    # herda categoria e area da conta logada / desafio vinculado
+    desafio = None
+    if payload.get("id_desafio") is not None:
+        desafio = _validar_desafio(payload["id_desafio"])
+
+    if not payload.get("categoria"):
+        payload["categoria"] = desafio.categoria if desafio else None
+
+    if not payload.get("area"):
+        payload["area"] = usuario.area if usuario.area else None
+
     for tentativa in range(3):
         ideia = Ideia(
             codigo=_proximo_codigo(),
@@ -196,6 +206,44 @@ def aprovar(id_ideia, perfis):
         raise ConflitoError("A ideia não está em um status que permita aprovação.")
 
     return _persistir_novo_status(ideia, "aprovada")
+
+
+def aceitar(id_ideia, id_usuario, perfis):
+    """Gestor aceita uma ideia vinculada a um de seus desafios; Analista pode aceitar qualquer uma."""
+    ideia = _buscar_ideia_ou_404(id_ideia)
+
+    if not _e_analista(perfis):
+        if not _e_gestor(perfis):
+            raise ProibidoError("Apenas Gestor Demandante ou Analista/Hub pode aceitar ideias.")
+        if not desafio_repository.usuario_e_responsavel(ideia.id_desafio, id_usuario):
+            raise ProibidoError("Você só pode aceitar ideias vinculadas aos seus desafios.")
+
+    status_atual = _status_normalizado(ideia.status)
+    if status_atual in {"aceita", "aprovada", "arquivada"}:
+        raise ConflitoError("A ideia já foi aceita, aprovada ou arquivada.")
+    if status_atual not in _STATUS_APROVAVEIS:
+        raise ConflitoError("A ideia não está em um status que permita aceitação.")
+
+    return _persistir_novo_status(ideia, "aceita")
+
+
+def rejeitar(id_ideia, id_usuario, perfis):
+    """Gestor rejeita uma ideia vinculada a um de seus desafios; Analista pode rejeitar qualquer uma."""
+    ideia = _buscar_ideia_ou_404(id_ideia)
+
+    if not _e_analista(perfis):
+        if not _e_gestor(perfis):
+            raise ProibidoError("Apenas Gestor Demandante ou Analista/Hub pode rejeitar ideias.")
+        if not desafio_repository.usuario_e_responsavel(ideia.id_desafio, id_usuario):
+            raise ProibidoError("Você só pode rejeitar ideias vinculadas aos seus desafios.")
+
+    status_atual = _status_normalizado(ideia.status)
+    if status_atual in {"rejeitada", "arquivada"}:
+        raise ConflitoError("A ideia já foi rejeitada ou arquivada.")
+    if status_atual not in _STATUS_APROVAVEIS:
+        raise ConflitoError("A ideia não está em um status que permita rejeição.")
+
+    return _persistir_novo_status(ideia, "rejeitada")
 
 
 def arquivar(id_ideia, id_usuario, perfis):

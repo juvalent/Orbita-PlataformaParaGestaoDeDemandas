@@ -46,6 +46,7 @@ def _desafio_para_dict(desafio):
         "id_desafio": desafio.id_desafio,
         "id_responsavel": desafio.id_responsavel,
         "titulo": desafio.titulo,
+        "resumo": desafio.resumo,
         "descricao_problema": desafio.descricao_problema,
         "area_demandante": desafio.area_demandante,
         "quem_afeta": desafio.quem_afeta,
@@ -75,6 +76,7 @@ def registrar(dados, id_usuario, perfis):
         desafio = desafio_repository.cadastrar(Desafio(
             id_responsavel=id_responsavel,
             titulo=dados["titulo"],
+            resumo=dados.get("resumo"),
             descricao_problema=dados["descricao_problema"],
             area_demandante=dados["area_demandante"],
             quem_afeta=dados.get("quem_afeta"),
@@ -130,8 +132,8 @@ def atualizar(id_desafio, dados, id_usuario, perfis):
         raise NaoEncontradoError("Desafio não encontrado.")
     _exigir_gerenciar(desafio, id_usuario, perfis)
 
-    campos = ("titulo", "descricao_problema", "area_demandante", "quem_afeta",
-              "impacto", "urgencia", "categoria", "status")
+    campos = ("titulo", "resumo", "descricao_problema", "area_demandante",
+              "quem_afeta", "impacto", "urgencia", "categoria", "status")
     alterados = {campo: dados[campo] for campo in campos if campo in dados}
     if not alterados:
         raise AppError("Informe ao menos um campo válido para atualizar.")

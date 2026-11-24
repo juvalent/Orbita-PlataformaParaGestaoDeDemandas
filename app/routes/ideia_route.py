@@ -23,7 +23,7 @@ bp_ideia.add_url_rule(
 bp_ideia.add_url_rule(
     "/<int:id_ideia>",
     view_func=jwt_required()(ideia_controller.atualizar),
-    methods=["PATCH", "PUT"], 
+    methods=["PATCH", "PUT"],
 )
 bp_ideia.add_url_rule(
     "/<int:id_ideia>",
@@ -34,6 +34,16 @@ bp_ideia.add_url_rule(
 bp_ideia.add_url_rule(
     "/<int:id_ideia>/aprovar",
     view_func=jwt_required()(ideia_controller.aprovar),
+    methods=["POST"],
+)
+bp_ideia.add_url_rule(
+    "/<int:id_ideia>/aceitar",
+    view_func=jwt_required()(ideia_controller.aceitar),
+    methods=["POST"],
+)
+bp_ideia.add_url_rule(
+    "/<int:id_ideia>/rejeitar",
+    view_func=jwt_required()(ideia_controller.rejeitar),
     methods=["POST"],
 )
 bp_ideia.add_url_rule(
