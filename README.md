@@ -210,3 +210,26 @@ Projeto desenvolvido pela **Squad 47** da Residência Tecnológica do Porto Digi
 
 ---
 
+
+
+## Projetos e Kanban
+
+A gestão de projetos é disponibilizada em `/api/v1/projetos` e utiliza autenticação JWT.
+A conversão só é permitida para o Analista/Hub e exige que o match esteja validado, que a
+ideia esteja aprovada e que exista uma triagem com decisão `aprovada`. Cada match pode gerar
+no máximo um projeto.
+
+As etapas do Kanban são `Aprovado`, `Planejamento`, `Em Desenvolvimento`, `Em Teste` e
+`Concluído`. A movimentação é exclusiva do Analista/Hub e registra a etapa de origem, a etapa
+de destino, o usuário e a data/hora em `movimentacao_kanban`, além de registrar o evento na
+trilha de auditoria. Projetos concluídos não podem ser movimentados novamente.
+
+Endpoints:
+
+* `GET /api/v1/projetos`: lista projetos com paginação e filtros por etapa, responsável, ideia e texto. O Analista/Hub visualiza todos; os demais usuários visualizam apenas os projetos sob sua responsabilidade.
+* `POST /api/v1/projetos`: converte uma ideia aprovada em projeto. Recebe `id_match` e, opcionalmente, `titulo`, `descricao`, `id_responsavel` e `data_prazo` (`YYYY-MM-DD`).
+* `GET /api/v1/projetos/{id}`: consulta os dados do projeto e o histórico de movimentações. Disponível ao Analista/Hub e ao responsável.
+* `PATCH /api/v1/projetos/{id}`: atualiza título, descrição, responsável ou prazo. Disponível ao Analista/Hub e ao responsável.
+* `PATCH /api/v1/projetos/{id}/kanban`: movimenta o projeto. Recebe `{ "etapa": "Planejamento" }` e é exclusivo do Analista/Hub.
+
+Em bancos novos, `create_tables.py` cria a coluna de prazo junto com as demais tabelas.

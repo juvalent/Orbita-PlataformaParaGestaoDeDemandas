@@ -42,7 +42,7 @@ def create_app(config=None):
 
     registrar_error_handlers(app)
 
-    from app.routes import bp_auth, bp_health, bp_desafio, bp_ideia, bp_match, bp_triagem, bp_ia
+    from app.routes import bp_auth, bp_health, bp_desafio, bp_ideia, bp_match, bp_triagem, bp_ia, bp_projeto
     app.register_blueprint(bp_health)
     app.register_blueprint(bp_auth)
     app.register_blueprint(bp_ideia)
@@ -50,5 +50,6 @@ def create_app(config=None):
     app.register_blueprint(bp_match)
     app.register_blueprint(bp_triagem)
     app.register_blueprint(bp_ia)
+    app.register_blueprint(bp_projeto)
 
     return app
