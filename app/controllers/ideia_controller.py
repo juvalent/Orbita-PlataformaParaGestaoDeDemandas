@@ -31,7 +31,7 @@ def listar():
 
 def criar():
     dados = IdeiaCriarSchema().load(_json_da_requisicao())
-    return jsonify(ideia_service.criar(dados, _id_usuario_logado())), 201
+    return jsonify(ideia_service.criar(dados, _id_usuario_logado(), _perfis_do_token())), 201
 
 
 def obter(id_ideia):
@@ -49,6 +49,14 @@ def atualizar(id_ideia):
 
 def aprovar(id_ideia):
     return jsonify(ideia_service.aprovar(id_ideia, _perfis_do_token())), 200
+
+
+def aceitar(id_ideia):
+    return jsonify(ideia_service.aceitar(id_ideia, _id_usuario_logado(), _perfis_do_token())), 200
+
+
+def rejeitar(id_ideia):
+    return jsonify(ideia_service.rejeitar(id_ideia, _id_usuario_logado(), _perfis_do_token())), 200
 
 
 def arquivar(id_ideia):
