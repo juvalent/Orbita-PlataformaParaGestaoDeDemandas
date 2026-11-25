@@ -5,3 +5,4 @@ from .desafio_routes import bp as bp_desafio
 from .match_route import bp as bp_match
 from .triagem_route import bp as bp_triagem
 from .ia_route import bp as bp_ia
+from .projeto_route import bp_projeto

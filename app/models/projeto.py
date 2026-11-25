@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
-from sqlalchemy import String, Text, DateTime, ForeignKey, func
+from sqlalchemy import String, Text, DateTime, Date, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.extensions import Base
@@ -15,6 +15,7 @@ class Projeto(Base):
     id_responsavel: Mapped[int] = mapped_column(ForeignKey("usuario.id_usuario"), nullable=False)
     titulo: Mapped[str] = mapped_column(String(150), nullable=False)
     descricao: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    status_kanban: Mapped[str] = mapped_column(String(30), nullable=False,default="Aprovado")
+    status_kanban: Mapped[str] = mapped_column(String(30), nullable=False, default="Aprovado")
+    data_prazo: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     data_criacao: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     data_atualizacao: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
